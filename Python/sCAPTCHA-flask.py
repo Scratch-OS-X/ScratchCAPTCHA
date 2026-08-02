@@ -122,5 +122,5 @@ def home():
     return render_template_string(HTML_PAGE)
 
 if __name__ == '__main__':
-    print("Ouvre ton navigateur sur : http://127.0.0.1:5000")
+    print("Ouvre ton navigateur sur : http://localhost:5000")
     app.run(debug=True)
