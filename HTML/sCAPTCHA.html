@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>ScratchCAPTCHA</title>
+    <title>sCAPTCHA</title>
     <style>
         body { 
             font-family: Arial, Roboto, sans-serif; 
@@ -18,7 +18,6 @@
             height: 180px;
         }
 
-        /* Widget principal */
         .recaptcha-box {
             width: 310px;
             height: 80px;
@@ -44,7 +43,6 @@
             cursor: pointer;
         }
 
-        /* Case à cocher */
         .checkbox {
             width: 28px;
             height: 28px;
@@ -58,15 +56,11 @@
             box-sizing: border-box;
         }
 
-        /* Spinner de chargement */
-        .spinner {
-            width: 14px;
-            height: 14px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #4a70d6;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+        .spinner-img {
+            width: 20px;
+            height: 20px;
             display: none;
+            animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
@@ -74,7 +68,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Symboles SVG de validation */
         .status-icon {
             width: 20px;
             height: 20px;
@@ -88,7 +81,6 @@
             user-select: none;
         }
 
-        /* Logo Scratch CAPTCHA */
         .brand-container {
             display: flex;
             align-items: center;
@@ -101,7 +93,6 @@
             object-fit: contain;
         }
 
-        /* Pop-up avec les chiffres */
         .popup-captcha {
             display: none;
             opacity: 0;
@@ -119,7 +110,6 @@
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
-        /* Transitions */
         .hidden {
             opacity: 0 !important;
             pointer-events: none;
@@ -144,7 +134,7 @@
     <div class="recaptcha-box" id="recaptchaBox">
         <div class="checkbox-container" onclick="lancerChargement()">
             <div class="checkbox" id="captchaCheckbox">
-                <div class="spinner" id="captchaSpinner"></div>
+                <img src="https://scratch.mit.edu/svgs/modal/spinner-blue.svg" class="spinner-img" id="captchaSpinner" alt="Chargement...">
                 
                 <svg id="iconCheck" class="status-icon" viewBox="0 0 24 24" fill="none" stroke="#4bc158" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
@@ -177,12 +167,10 @@ let codeSecret = "";
 let estValide = false;
 let enChargement = false;
 
-// Empêche la saisie de caractères qui ne sont pas des chiffres
 function bloquerNonChiffres(element) {
     element.value = element.value.replace(/[^0-9]/g, '');
 }
 
-// Déclenche la validation lors de l'appui sur "Entrée"
 function gererToucheEntree(event) {
     if (event.key === "Enter") {
         validerCaptcha();
@@ -211,8 +199,8 @@ function lancerChargement() {
             const popup = document.getElementById("popupCaptcha");
             genererCaptcha();
             popup.classList.add("visible");
-            // Focus automatique sur la case de saisie
             const inputField = document.getElementById("userInput");
+            inputField.value = "";
             inputField.focus();
         }, 200);
 
