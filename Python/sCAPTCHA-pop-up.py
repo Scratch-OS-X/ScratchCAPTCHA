@@ -1,28 +1,24 @@
 import webview
 
-# Le code HTML/CSS/JS exact avec le design parfait
 HTML_PAGE = """
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <title>sCAPTCHA</title>
     <style>
-        * { box-sizing: border-box; }
         body { 
             font-family: Arial, Roboto, sans-serif; 
             display: flex; 
             justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            margin: 0; 
+            margin-top: 50px; 
             background-color: #f9f9f9; 
-            user-select: none;
         }
 
         .captcha-wrapper {
             position: relative;
             width: 310px;
-            height: 140px;
+            height: 180px;
         }
 
         .recaptcha-box {
@@ -36,6 +32,7 @@ HTML_PAGE = """
             align-items: center;
             justify-content: space-between;
             padding: 0 16px;
+            box-sizing: border-box;
             position: absolute;
             top: 0;
             left: 0;
@@ -59,16 +56,14 @@ HTML_PAGE = """
             align-items: center;
             justify-content: center;
             position: relative;
+            box-sizing: border-box;
         }
 
-        .spinner {
-            width: 14px;
-            height: 14px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #4a70d6;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+        .spinner-img {
+            width: 20px;
+            height: 20px;
             display: none;
+            animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
@@ -86,6 +81,13 @@ HTML_PAGE = """
             font-size: 15px;
             color: #111;
             font-weight: 500;
+            user-select: none;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .brand-image {
@@ -102,19 +104,29 @@ HTML_PAGE = """
             left: 0;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            padding: 12px;
+            padding: 15px;
             width: 310px;
             text-align: center;
             background: white;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            box-sizing: border-box;
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
-        .hidden { opacity: 0 !important; pointer-events: none; transform: scale(0.95); }
-        .visible { display: block !important; opacity: 1 !important; transform: scale(1); }
+        .hidden {
+            opacity: 0 !important;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
 
-        canvas { border-radius: 6px; margin-bottom: 8px; image-rendering: pixelated; }
-        input { width: 80%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; margin-bottom: 8px; text-align: center; }
+        .visible {
+            display: block !important;
+            opacity: 1 !important;
+            transform: scale(1);
+        }
+
+        canvas { border-radius: 6px; margin-bottom: 10px; image-rendering: pixelated; }
+        input { width: 80%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; margin-bottom: 10px; text-align: center; }
         button { padding: 8px 16px; background-color: #7042c4; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         button:hover { background-color: #5b34a8; }
     </style>
@@ -124,8 +136,8 @@ HTML_PAGE = """
 <div class="captcha-wrapper">
     <div class="recaptcha-box" id="recaptchaBox">
         <div class="checkbox-container" onclick="lancerChargement()">
-            <div class="checkbox">
-                <div class="spinner" id="captchaSpinner"></div>
+            <div class="checkbox" id="captchaCheckbox">
+                <img src="https://scratch.mit.edu/svgs/modal/spinner-blue.svg" class="spinner-img" id="captchaSpinner" alt="Chargement...">
                 
                 <svg id="iconCheck" class="status-icon" viewBox="0 0 24 24" fill="none" stroke="#4bc158" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
@@ -136,93 +148,133 @@ HTML_PAGE = """
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </div>
-            <span class="checkbox-label">Je ne suis pas un robot.</span>
+            <span class="checkbox-label" id="captchaText">Je ne suis pas un robot.</span>
         </div>
 
-        <img src="https://u.cubeupload.com/Scratch_2_0_2_4/IMG4788.jpeg" alt="Logo" class="brand-image">
+        <div class="brand-container">
+            <img src="https://u.cubeupload.com/Scratch_2_0_2_4/IMG4788.jpeg" alt="Scratch CAPTCHA Logo" class="brand-image">
+        </div>
     </div>
 
     <div class="popup-captcha" id="popupCaptcha">
-        <canvas id="captchaCanvas" width="280" height="130"></canvas>
-        <input type="text" id="userInput" placeholder="Entrez les 4 chiffres" maxlength="4" autocomplete="off" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeyup="if(event.key==='Enter') validerCaptcha()">
+        <canvas id="captchaCanvas" width="280" height="140"></canvas>
+        
+        <input type="text" id="userInput" placeholder="Entrez les 4 chiffres" maxlength="4" autocomplete="off" inputmode="numeric" pattern="[0-9]*" oninput="bloquerNonChiffres(this)" onkeyup="gererToucheEntree(event)">
         <br>
-        <button onclick="validerCaptcha()">Valider</button>
+        <button id="btnValider" onclick="validerCaptcha()">Valider</button>
     </div>
 </div>
 
 <script>
-let codeSecret = "", estValide = false, enChargement = false;
+let codeSecret = "";
+let estValide = false;
+let enChargement = false;
+
+function bloquerNonChiffres(element) {
+    element.value = element.value.replace(/[^0-9]/g, '');
+}
+
+function gererToucheEntree(event) {
+    if (event.key === "Enter") {
+        validerCaptcha();
+    }
+}
 
 function lancerChargement() {
     if (estValide || enChargement) return;
-    enChargement = true;
 
-    document.getElementById("iconCheck").style.display = "none";
-    document.getElementById("iconCross").style.display = "none";
-    document.getElementById("captchaSpinner").style.display = "block";
+    enChargement = true;
+    const spinner = document.getElementById("captchaSpinner");
+    const iconCheck = document.getElementById("iconCheck");
+    const iconCross = document.getElementById("iconCross");
+
+    iconCheck.style.display = "none";
+    iconCross.style.display = "none";
+    spinner.style.display = "block";
 
     setTimeout(() => {
-        document.getElementById("captchaSpinner").style.display = "none";
+        spinner.style.display = "none";
         enChargement = false;
+
         document.getElementById("recaptchaBox").classList.add("hidden");
 
         setTimeout(() => {
             const popup = document.getElementById("popupCaptcha");
             genererCaptcha();
             popup.classList.add("visible");
-            document.getElementById("userInput").focus();
+            const inputField = document.getElementById("userInput");
+            inputField.value = "";
+            inputField.focus();
         }, 200);
+
     }, 1000);
 }
 
 function genererCaptcha() {
     const canvas = document.getElementById("captchaCanvas");
     const ctx = canvas.getContext("2d");
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     codeSecret = Math.floor(1000 + Math.random() * 9000).toString();
 
-    for (let x = -100; x < canvas.width + 100; x += 0.5) {
-        ctx.strokeStyle = `hsl(${Math.random() * 360}, 95%, 50%)`;
+    const pas = 0.5;
+    for (let x = -100; x < canvas.width + 100; x += pas) {
+        const teinte = Math.random() * 360;
+        ctx.strokeStyle = `hsl(${teinte}, 95%, 50%)`;
         ctx.lineWidth = 2.5;
+        
         ctx.beginPath();
         ctx.moveTo(x, -10);
         ctx.lineTo(x + 90, canvas.height + 10);
         ctx.stroke();
     }
 
-    const lowRes = document.createElement("canvas");
-    lowRes.width = 140; lowRes.height = 70;
-    const lowCtx = lowRes.getContext("2d");
+    const lowResCanvas = document.createElement("canvas");
+    lowResCanvas.width = 140;
+    lowResCanvas.height = 75;
+    const lowCtx = lowResCanvas.getContext("2d");
+
     lowCtx.font = "900 30px sans-serif";
-    lowCtx.fillStyle = "#ffaa00"; lowCtx.strokeStyle = "#000000"; lowCtx.lineWidth = 2.5;
+    lowCtx.fillStyle = "#ffaa00";
+    lowCtx.strokeStyle = "#000000";
+    lowCtx.lineWidth = 2.5;
 
     for (let i = 0; i < codeSecret.length; i++) {
         lowCtx.save();
-        lowCtx.translate(18 + i * 27, 45 + (Math.random() * 6 - 3));
+        let x = 18 + i * 27;
+        let y = 48 + (Math.random() * 6 - 3);
+        lowCtx.translate(x, y);
         lowCtx.rotate((Math.random() - 0.5) * 0.15);
+        
         lowCtx.strokeText(codeSecret[i], 0, 0);
         lowCtx.fillText(codeSecret[i], 0, 0);
         lowCtx.restore();
     }
 
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(lowRes, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(lowResCanvas, 0, 0, canvas.width, canvas.height);
 }
 
 function validerCaptcha() {
     const saisie = document.getElementById("userInput").value;
-    document.getElementById("popupCaptcha").classList.remove("visible");
+    const popup = document.getElementById("popupCaptcha");
+    const recaptchaBox = document.getElementById("recaptchaBox");
+    const iconCheck = document.getElementById("iconCheck");
+    const iconCross = document.getElementById("iconCross");
+
+    popup.classList.remove("visible");
 
     setTimeout(() => {
-        document.getElementById("recaptchaBox").classList.remove("hidden");
+        recaptchaBox.classList.remove("hidden");
 
         if (saisie === codeSecret) {
             estValide = true;
-            document.getElementById("iconCheck").style.display = "block";
+            iconCheck.style.display = "block";
         } else {
-            document.getElementById("iconCross").style.display = "block";
+            iconCross.style.display = "block";
         }
+
         document.getElementById("userInput").value = "";
     }, 300);
 }
