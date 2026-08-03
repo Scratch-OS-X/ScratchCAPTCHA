@@ -1,7 +1,7 @@
 import json
 import urllib.request
 
-VERSION_ACTUELLE = "1.1"
+VERSION_ACTUELLE = "1.2"
 REPO_GITHUB = "Scratch-OS-X/ScratchCAPTCHA"
 
 
