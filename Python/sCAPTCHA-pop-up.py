@@ -285,6 +285,5 @@ function validerCaptcha() {
 """
 
 if __name__ == '__main__':
-    # Ouvre une vraie fenêtre de bureau avec le rendu web parfait
     window = webview.create_window("Scratch CAPTCHA", html=HTML_PAGE, width=360, height=260, resizable=False)
     webview.start()
