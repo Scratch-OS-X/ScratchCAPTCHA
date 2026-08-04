@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Badge style reCAPTCHA Invisible</title>
+  <style>
+    /* Style global de la page */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Roboto, Arial, sans-serif;
+      background-color: #f4f5f7;
+      min-height: 100vh;
+    }
+
+    /* --- LE BADGE RECAPTCHA --- */
+    .recaptcha-badge {
+      position: fixed;
+      bottom: 20px;
+      right: -250px; /* Cache la partie texte (350px total - 100px zone icône) */
+      width: 350px;
+      height: 90px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.14), 0 6px 14px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      transition: right 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 99999;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Fait glisser le badge vers la gauche au survol */
+    .recaptcha-badge:hover {
+      right: 0;
+    }
+
+    /* Section Icône (toujours visible) */
+    .recaptcha-icon-container {
+      width: 100px;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f9f9f9;
+      flex-shrink: 0;
+    }
+
+    /* Style du logo */
+    .recaptcha-logo {
+      width: 70px;
+      height: 70px;
+      object-fit: contain;
+    }
+
+    /* Section Contenu Texte (se découvre au survol) */
+    .recaptcha-content {
+      width: 250px;
+      padding-right: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+
+    .recaptcha-text {
+      font-size: 15px;
+      color: #444444;
+      line-height: 1.3;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .recaptcha-links {
+      font-size: 11px;
+      color: #888888;
+      line-height: 1.2;
+    }
+
+    .recaptcha-links a {
+      color: #4285f4;
+      text-decoration: none;
+    }
+
+    .recaptcha-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="recaptcha-badge" role="status" aria-live="polite">
+    
+    <div class="recaptcha-icon-container">
+      <img class="recaptcha-logo" src="https://u.cubeupload.com/Scratch_2_0_2_4/IMG4788.jpeg" alt="Logo reCAPTCHA">
+    </div>
+
+    <div class="recaptcha-content">
+      <div class="recaptcha-text">
+        Protégé par reCAPTCHA
+      </div>
+      <div class="recaptcha-links">
+        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Confidentialité</a>
+        -
+        <a href="https://policies.google.com/terms" target="_blank" rel="noopener">Conditions</a>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
